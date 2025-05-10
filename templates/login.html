@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Login - Book Store{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="auth-card">
+            <div class="text-center mb-4">
+                <i class="fas fa-book-open fa-3x text-primary mb-3"></i>
+                <h2 class="fw-bold">Welcome Back!</h2>
+                <p class="text-muted">Sign in to continue to Book Store</p>
+            </div>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label">
+                        <i class="fas fa-user text-primary me-2"></i>Username
+                    </label>
+                    <input type="text" class="form-control" name="username" placeholder="Enter your username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock text-primary me-2"></i>Password
+                    </label>
+                    <input type="password" class="form-control" name="password" placeholder="Enter your password" required>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember">
+                        <label class="form-check-label" for="remember">Remember me</label>
+                    </div>
+                    <a href="#" class="text-primary">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </button>
+                <p class="text-center mt-3">
+                    Don't have an account? <a href="{{ url_for('register') }}" class="text-primary">Register now</a>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2.5rem;
+        box-shadow: var(--shadow);
+        margin: 2rem 0;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+</style>
+{% endblock %}

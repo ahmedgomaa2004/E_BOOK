@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% block title %}Home - Book Store{% endblock %}
+{% block content %}
+<div class="hero-section text-center mb-5">
+    <h1 class="display-4 fw-bold">Welcome to <span class="text-primary">Book Store</span></h1>
+    <p class="lead text-muted mb-4">Discover your next favorite book from our curated collection</p>
+    <div class="search-container mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form action="{{ url_for('home') }}" method="GET" class="search-form">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="q" placeholder="Search for books, authors, or categories..." value="{{ search_query }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="featured-section mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title">
+            {% if search_query %}
+            <i class="fas fa-search me-2"></i>Search Results for "{{ search_query }}"
+            {% elif active_category %}
+            <i class="fas fa-tag me-2"></i>{{ active_category }} Books
+            {% else %}
+            <i class="fas fa-th-large me-2"></i>All Books
+            {% endif %}
+        </h2>
+        <div class="d-flex gap-2">
+            {% if search_query %}
+            <a href="{{ url_for('home') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-times me-1"></i>Clear Search
+            </a>
+            {% elif active_category %}
+            <a href="{{ url_for('home') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-th me-1"></i>View All Categories
+            </a>
+            {% endif %}
+            
+            <!-- Filter Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown">
+                    <i class="fas fa-filter me-1"></i>Filters
+                </button>
+                <div class="dropdown-menu p-3" style="width: 300px;">
+                    <form action="{{ url_for('home') }}" method="GET" id="filterForm">
+                        {% if search_query %}
+                        <input type="hidden" name="q" value="{{ search_query }}">
+                        {% endif %}
+                        {% if active_category %}
+                        <input type="hidden" name="category_id" value="{{ active_category.id }}">
+                        {% endif %}
+                        
+                        <h6 class="mb-3">Price Range</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Min Price: ${{ min_price or min_book_price }}</label>
+                            <input type="range" class="form-range" name="min_price" min="{{ min_book_price }}" max="{{ max_book_price }}" value="{{ min_price or min_book_price }}" oninput="this.previousElementSibling.textContent = 'Min Price: $' + this.value">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Max Price: ${{ max_price or max_book_price }}</label>
+                            <input type="range" class="form-range" name="max_price" min="{{ min_book_price }}" max="{{ max_book_price }}" value="{{ max_price or max_book_price }}" oninput="this.previousElementSibling.textContent = 'Max Price: $' + this.value">
+                        </div>
+                        
+                        <h6 class="mb-3">Sort By</h6>
+                        <div class="mb-3">
+                            <select class="form-select" name="sort_by" onchange="this.form.submit()">
+                                <option value="default" {% if sort_by == 'default' %}selected{% endif %}>Default</option>
+                                <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Price</option>
+                                <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <select class="form-select" name="sort_order" onchange="this.form.submit()">
+                                <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+                                <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
+                            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Category Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="categoryDropdown" data-bs-toggle="dropdown">
+                    <i class="fas fa-tag me-1"></i>Categories
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
+                    {% for category in categories %}
+                    <li><a class="dropdown-item" href="{{ url_for('home', category_id=category.id) }}">{{ category.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% if books %}
+    <div class="row">
+        {% for book in books %}
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-img-container">
+                    <img src="{{ url_for('static', filename=book.cover) }}" class="card-img-top" alt="{{ book.title }}">
+                    <div class="card-overlay">
+                        <a href="#" class="btn btn-sm btn-light">Quick View</a>
+                    </div>
+                    {% if book.category_name %}
+                    <div class="category-badge">
+                        <i class="fas fa-{{ book.category_icon }} me-1"></i>{{ book.category_name }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text text-muted">{{ book.author }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="price-tag">${{ '%.2f'|format(book.price) }}</span>
+                        <div class="rating">
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star-half-alt text-warning"></i>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('add_to_cart', book_id=book.id) }}" class="btn btn-primary w-100 mt-3">
+                        <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-books text-center py-5">
+        {% if search_query %}
+        <i class="fas fa-search fa-4x text-muted mb-3"></i>
+        <h3>No results found</h3>
+        <p class="text-muted">We couldn't find any books matching "{{ search_query }}".</p>
+        <a href="{{ url_for('home') }}" class="btn btn-primary mt-3">
+            <i class="fas fa-home me-2"></i>Back to Home
+        </a>
+        {% elif active_category %}
+        <i class="fas fa-tag fa-4x text-muted mb-3"></i>
+        <h3>No books found</h3>
+        <p class="text-muted">There are no books in the "{{ active_category }}" category yet.</p>
+        <a href="{{ url_for('home') }}" class="btn btn-primary mt-3">
+            <i class="fas fa-home me-2"></i>Back to Home
+        </a>
+        {% else %}
+        <i class="fas fa-book fa-4x text-muted mb-3"></i>
+        <h3>No books found</h3>
+        <p class="text-muted">There are no books in the store yet.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div class="categories-section mb-5">
+    <h2 class="section-title mb-4">Browse Categories</h2>
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-md-3 col-6 mb-4">
+            <a href="{{ url_for('home', category_id=category.id) }}" class="category-card-link">
+                <div class="category-card {% if active_category == category.name %}active{% endif %}">
+                    <i class="fas fa-{{ category.icon }} fa-2x mb-3 text-primary"></i>
+                    <h5>{{ category.name }}</h5>
+                    <span class="category-arrow"><i class="fas fa-arrow-right"></i></span>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .hero-section {
+        padding: 3rem 0;
+    }
+
+    .search-container {
+        margin-top: 2rem;
+    }
+
+    .search-form .input-group {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        border-radius: 50px;
+        overflow: hidden;
+    }
+
+    .search-form .form-control {
+        border: none;
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .search-form .btn {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        border-radius: 0 50px 50px 0;
+    }
+
+    .section-title {
+        position: relative;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .card-img-container {
+        position: relative;
+        overflow: hidden;
+        background-color: #f8f9fa;
+        padding: 10px;
+    }
+
+    .card-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .card:hover .card-overlay {
+        opacity: 1;
+    }
+
+    .price-tag {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--primary);
+    }
+
+    .category-card-link {
+        text-decoration: none;
+        display: block;
+    }
+
+    .category-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2rem 1rem;
+        text-align: center;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .category-card.active {
+        background-color: var(--primary);
+        color: white;
+    }
+
+    .category-card.active i {
+        color: white !important;
+    }
+
+    .category-arrow {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        opacity: 0;
+        transition: var(--transition);
+        color: var(--primary);
+    }
+
+    .category-card:hover .category-arrow {
+        opacity: 1;
+        right: 20px;
+    }
+
+    .category-card.active .category-arrow {
+        color: white;
+        opacity: 1;
+    }
+
+    .category-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(255, 255, 255, 0.9);
+        color: var(--primary);
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .empty-books {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 3rem;
+    }
+
+    .dropdown-menu {
+        border: none;
+        box-shadow: var(--shadow);
+        border-radius: 8px;
+    }
+
+    .dropdown-item {
+        padding: 0.5rem 1rem;
+        transition: var(--transition);
+    }
+
+    .dropdown-item:hover {
+        background-color: rgba(108, 92, 231, 0.1);
+        color: var(--primary);
+    }
+</style>
+{% endblock %}
